@@ -1,0 +1,13 @@
+**/*.pyc
+**/runs/
+**/*.yml
+*.zip
+
+# IDE
+.idea/*
+.vscode/*
+
+*.png
+*.jpg
+*.gif
+*.p
