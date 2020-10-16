@@ -115,8 +115,6 @@ def plot_test(out_file,
   plt.close('all')
 
 
-
-
 def get_split(test_len,
               norm,
               lam,

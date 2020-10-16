@@ -9,7 +9,7 @@ import numpy as np
 
 from pathlib import Path
 from experiment.pendulum.utils import read_pendulum_config
-from experiment.pendulum import run_pendulum_experiment
+from experiment.pendulum.main import run_pendulum_experiment
 
 
 # ------------------------------------------------------------------------------
