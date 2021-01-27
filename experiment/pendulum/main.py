@@ -11,8 +11,11 @@ from torch import nn
 from torch.utils.data import DataLoader
 from pathlib import Path
 
-from experiment.pendulum.utils import plot_training, plot_test, get_split, MyDataset
+from experiment.pendulum.utils import plot_training, plot_test, plot_r, get_split, MyDataset
 from models.model import NoInputMassConserving, JustAnARLSTM
+
+import matplotlib.pyplot as plt
+
 
 def run_pendulum_experiment(cfg):
     # Define model type:
@@ -90,7 +93,7 @@ def run_pendulum_experiment(cfg):
         for b, (xm, xa) in enumerate(loader):
             optimizer.zero_grad()
 
-            m_out, c = model(xm[:, 0],
+            m_out, c, r = model(xm[:, 0],
                              xm.shape[1] - 1,
                              xa=xa)
 
@@ -116,7 +119,7 @@ def run_pendulum_experiment(cfg):
             print(f'epoch: {i} loss: {single_loss.item():10.8f}')
 
             with torch.no_grad():
-                m_out, c = model(xm[:, 0], seq_len - 1, xa=xa)
+                m_out, c, r = model(xm[:, 0], seq_len - 1, xa=xa)
             if norm:
                 act = scaler.inverse_transform(c.squeeze(0).numpy())
             else:
@@ -133,7 +136,20 @@ def run_pendulum_experiment(cfg):
                           friction,
                           seq_len,
                           title_appendix=f'(epoch {i})')
-
+            ####################################################
+            # plot r
+            r_n = r.squeeze(0).numpy()
+            name = f"plot_{modeltype}_Redistribution_{friction_addendum}_idx{plot_idx:03d}.pdf"
+            plot_r(Path(cfg["out_dir"], "figures", name),
+                          df['Time'],
+                          r.squeeze(0).numpy(),
+                          df['Kinetic Energy'],
+                          df['Potential Energy'],
+                          friction,
+                          seq_len,
+                          True,
+                          False,
+                          title_appendix=f'(epoch {i})')
     # --------------------------------------------------------------------------
     # save params
     print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
@@ -151,7 +167,7 @@ def run_pendulum_experiment(cfg):
 
     model.eval()
     with torch.no_grad():
-        m_out, c = model(test[0].unsqueeze(0),
+        m_out, c, r = model(test[0].unsqueeze(0),
                          seq_len + test_len - 1,
                          xa=test_aux.unsqueeze(0))
         if norm:

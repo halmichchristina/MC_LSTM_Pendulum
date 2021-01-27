@@ -34,20 +34,6 @@ def create_Oscillation(lam,
     #Deflection
     s = r*y
 
-    #Show Energy graph
-    # plt.title('Amplitude of pendulum over time')
-    # plt.ylabel('Amplitude ')
-    # plt.xlabel('Time in s')
-    # plt.autoscale(axis='t', tight=True)
-    # plt.plot(t,s, label = 'Amplitude')
-    # #plt.plot(t,w, label = 'W')
-    # plt.legend()
-    # plt.savefig("./Figures/Amplitude.jpg", bbox_inches='tight')
-    # plt.clf()
-
-
-    #print('Angle max, min', y.max(), y.min())
-
     #Append new sample to dataset
     #G.append(g)
     #M.append(m)
@@ -63,11 +49,12 @@ def create_Oscillation(lam,
             'Kinetic Energy': E_kin,  #K
             'Potential Energy': E_pot, #P
             'Angle':y,
+            'Velocity':w,
             'Deflection':s, 
             'Damping Factor': lam, #Lam
             'Acceleration': g,#G
             'Length of String': r,#L
             'Mass':m,#M
             'Initial Amplitude':a}#A
-    df = pd.DataFrame(data, columns=['Time','Kinetic Energy','Potential Energy','Angle','Deflection','Damping Factor','Acceleration','Length of String','Mass','Initial Amplitude'])
+    df = pd.DataFrame(data, columns=['Time','Kinetic Energy','Potential Energy','Angle','Velocity','Deflection','Damping Factor','Acceleration','Length of String','Mass','Initial Amplitude'])
     return df

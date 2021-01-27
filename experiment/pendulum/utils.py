@@ -114,6 +114,36 @@ def plot_test(out_file,
   plt.clf()
   plt.close('all')
 
+def plot_r(out_file, t, r, E_kin, E_pot, friction, seq_len, grid_on, inline_on,title_appendix):
+  plt.figure(figsize=(8.0, 6.0))
+  #if friction:
+    #plt.title('Redistribution with friction' + title_appendix)
+  #else:
+    #plt.title('Redistribution without friction' + title_appendix)
+
+  fig, axs = plt.subplots(2, 1,figsize=(15,15))
+  axs[0].plot(t[1:seq_len], r[:, 0], label=r'Flow: $E_{pot}$ to $E_{kin}$', c = "tomato", linewidth=3)
+  axs[0].plot(t[1:seq_len], r[:, 1], label=r'Flow: $E_{kin}$ to $E_{pot}$', c = "steelblue", linewidth=3,linestyle='dashed')
+  #axs[0].set_xlabel('time',fontsize=30)
+  axs[0].set_ylabel('Fraction of moving Energy',fontsize=30)
+  axs[0].grid(grid_on, c="gainsboro")
+  axs[0].autoscale(axis='t')
+  axs[0].tick_params(axis='both', which='major', labelsize=25)
+  axs[0].xaxis.label.set_size(30)
+  axs[0].yaxis.label.set_size(30)
+  axs[0].legend(loc='upper right', fontsize=30)  #bbox_to_anchor=(1, 0.5),
+  axs[1].plot(t[1:seq_len], E_kin[1:seq_len], label=r'$E_{kin}$', c = "magenta", linewidth=3,linestyle='dashed')
+  axs[1].plot(t[1:seq_len], E_pot[1:seq_len], label=r'$E_{pot}$', c = "cyan", linewidth=3)
+  axs[1].set_xlabel('Time in s',fontsize=30)
+  axs[1].set_ylabel('Energy in J',fontsize=30)
+  axs[1].grid(grid_on, c="gainsboro")
+  axs[1].legend(loc='upper right', fontsize=30)
+  axs[1].tick_params(axis='both', which='major', labelsize=25)
+  #fig.legend(loc='center left', bbox_to_anchor=(1, 0.5))#bbox_to_anchor=(1.05, 1), loc='upper left')
+  #plt.rcParams.update({'font.size': 18})
+  plt.savefig(out_file, bbox_inches='tight')
+  plt.close('all')
+  plt.clf()
 
 def get_split(test_len,
               norm,
@@ -132,6 +162,7 @@ def get_split(test_len,
   noise = np.random.normal(0, noise_std, size=df.shape)
   df += noise
   #
+  #d = df[['Velocity', 'Angle']].values.astype(float)
   d = df[['Kinetic Energy', 'Potential Energy']].values.astype(float)
   #aux_primary = df[['Angle', 'Deflection']].values.astype(float)
   time_line = np.linspace(0, np.pi, df.shape[0])
@@ -200,3 +231,36 @@ def dump_pendulum_config(cfg, folder, filename: str = 'config.yml'):
       yaml.dump(dict(OrderedDict(sorted(temp_cfg.items()))), fp)
   else:
     FileExistsError(cfg_path)
+### Hamiltonian
+def rk4(fun, y0, t, dt, *args, **kwargs):
+  dt2 = dt / 2.0
+  k1 = fun(y0, t, *args, **kwargs)
+  k2 = fun(y0 + dt2 * k1, t + dt2, *args, **kwargs)
+  k3 = fun(y0 + dt2 * k2, t + dt2, *args, **kwargs)
+  k4 = fun(y0 + dt * k3, t + dt, *args, **kwargs)
+  dy = dt / 6.0 * (k1 + 2 * k2 + 2 * k3 + k4)
+  return dy
+
+def L2_loss(u, v):
+  return (u-v).pow(2).mean()
+
+
+def choose_nonlinearity(name):
+  nl = None
+  if name == 'tanh':
+    nl = torch.tanh
+  elif name == 'relu':
+    nl = torch.relu
+  elif name == 'sigmoid':
+    nl = torch.sigmoid
+  elif name == 'softplus':
+    nl = torch.nn.functional.softplus
+  elif name == 'selu':
+    nl = torch.nn.functional.selu
+  elif name == 'elu':
+    nl = torch.nn.functional.elu
+  elif name == 'swish':
+    nl = lambda x: x * torch.sigmoid(x)
+  else:
+    raise ValueError("nonlinearity not recognized")
+  return nl
